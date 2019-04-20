@@ -3,29 +3,52 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:gravity="center"
         android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent">
 
         <TextView
-            android:id="@+id/lipsView"
+            android:id="@+id/tv_main_messahe"
+            android:textSize="14sp"
+            android:textColor="@color/colorPrimary"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="我是提示文本框" />
+            android:text="这里显示的主线程发过来的消息" />
+
+        <TextView
+            android:id="@+id/tv_thread_messahe"
+            app:layout_constraintTop_toBottomOf="@+id/tv_main_messahe"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="@color/colorAccent"
+            android:text="这里显示子线程发过来的消息" />
         <Button
             android:id="@+id/btView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="发送事件"
+            app:layout_constraintTop_toBottomOf="@+id/tv_thread_messahe"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            android:text="主线程发送事件"
             android:onClick="sendMessage"/>
         <Button
             android:id="@+id/threadBtView"
+            app:layout_constraintTop_toBottomOf="@+id/btView"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="子线程发送事件"
             android:onClick="threadSendMessage"/>
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>
