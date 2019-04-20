@@ -21,9 +21,15 @@ class LiveDataBus private constructor() {
     }
 
     private object SingletonHolder {
-        public val DEFAULT_BUS = LiveDataBus()
+        val DEFAULT_BUS = LiveDataBus()
     }
 
+
+    companion object {
+        fun get(): LiveDataBus {
+            return SingletonHolder.DEFAULT_BUS
+        }
+    }
 
     /**
      * 外部调用 （提供给订阅者的方法）
@@ -37,10 +43,16 @@ class LiveDataBus private constructor() {
     }
 
 
+    fun with(key: String): BusMutableLiveData<Any>? {
+        return with(key, Any::class.java)
+    }
+
     /**
      * 重写MutableLiveData 在observe方法中进行Hook
      */
     class BusMutableLiveData<T> : MutableLiveData<T>() {
+
+        private val observerMap = HashMap<Observer<*>, Observer<*>>()
 
         override fun observe(owner: LifecycleOwner, observer: Observer<in T>) {
             super.observe(owner, observer)
@@ -50,6 +62,27 @@ class LiveDataBus private constructor() {
                 e.printStackTrace()
             }
 
+        }
+
+        override fun observeForever(observer: Observer<in T>) {
+            if (!observerMap.containsKey(observer)) {
+                observerMap[observer] = ObserverWrapper(observer)
+            }
+            super.observeForever((observerMap[observer] as Observer<in T>)!!)
+        }
+
+        override fun removeObserver(observer: Observer<in T>) {
+            var realObserver: Observer<*>? = null
+            if (observerMap.containsKey(observer)) {
+                realObserver = observerMap.remove(observer)
+            } else {
+                realObserver = observer
+            }
+            super.removeObserver((realObserver as Observer<in T>)!!)
+        }
+
+        override fun removeObservers(owner: LifecycleOwner) {
+            super.removeObservers(owner)
         }
 
         /**
@@ -79,24 +112,46 @@ class LiveDataBus private constructor() {
                 objectWrapper = (invokeEntry as Map.Entry<*, *>).value
             }
             if (objectWrapper == null) {
-                throw NullPointerException("Wrapper can not be bull!")
+                throw NullPointerException("Wrapper can not be null!")
             }
-            val superclass = objectWrapper.javaClass.getSuperclass()
+            val classObserverWrapper = objectWrapper.javaClass.superclass
             //通过superclass获取mlastVersion
-            val mLastVersion = superclass!!.getDeclaredField("mLastVersion")
+            val mLastVersion = classObserverWrapper!!.getDeclaredField("mLastVersion")
             mLastVersion.setAccessible(true)
+            //get livedata's version
             val mVersion = liveDataClass!!.getDeclaredField("mVersion")
             mVersion.setAccessible(true)
-            val `object` = mVersion.get(this)
+            val objectVersion = mVersion.get(this)
             //把mVersion的值赋值给mLastVersion成员变量达人对象
-            mLastVersion.set(objectWrapper, `object`)
+            mLastVersion.set(objectWrapper, objectVersion)
         }
+
     }
 
-    companion object {
 
-        fun get(): LiveDataBus {
-            return SingletonHolder.DEFAULT_BUS
-        }
-    }
+    private class ObserverWrapper<T>(
+            private val observer: Observer<T>?) : Observer<T> {
+                   private val isCallOnObserve: Boolean
+                    get() {
+                        val stackTrace = Thread.currentThread().stackTrace
+                        if (stackTrace != null && stackTrace.size > 0) {
+                            for (element in stackTrace) {
+                                if ("androidx.lifecycle.LiveData" == element.className && "observeForever" == element.methodName) {
+                                    return true
+                                }
+                            }
+                        }
+                        return false
+                    }
+
+                    override fun onChanged(t: T?) {
+                        if (observer != null) {
+                            if (isCallOnObserve) {
+                                return
+                            }
+                            observer.onChanged(t)
+                        }
+                    }
+             }
 }
+
