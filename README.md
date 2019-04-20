@@ -2,7 +2,7 @@
 <a href="https://996.icu"><img src="https://img.shields.io/badge/link-996.icu-red.svg" alt="996.icu" /></a>
 
 
- ###LiveDataBus消息总线例子
+ ### LiveDataBus消息总线例子
 
 从LiveData谈起
 
