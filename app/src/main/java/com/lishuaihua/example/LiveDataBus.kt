@@ -136,6 +136,8 @@ class LiveDataBus private constructor() {
                         val stackTrace = Thread.currentThread().stackTrace
                         if (stackTrace != null && stackTrace.size > 0) {
                             for (element in stackTrace) {
+                                //TODO 用AndroidX就是匹配androidx.lifecycle.LiveData
+                                //TODO 不用AndroidX就是匹配android.arch.lifecycle.LiveData"
                                 if ("androidx.lifecycle.LiveData" == element.className && "observeForever" == element.methodName) {
                                     return true
                                 }
